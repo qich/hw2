@@ -19,6 +19,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.Date;
+import java.text.SimpleDateFormat;
 
 public class GlobeSortClient {
 
@@ -39,13 +41,15 @@ public class GlobeSortClient {
     }
 
     public void run(Integer[] values) throws Exception {
+    	SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		System.out.println(df.format(new Date()));
     	long startTime,endTime;
         System.out.println("Pinging " + serverStr + "...");
         startTime = System.currentTimeMillis();
         serverStub.ping(Empty.newBuilder().build());
         endTime = System.currentTimeMillis();
         long t_ping = endTime - startTime;
-        System.out.println("run-time: " + t_ping + "ms");
+        System.out.println("t_ping = " + t_ping + "ms");
         System.out.println("Ping successful.");
 
         System.out.println("Requesting server to sort array");
@@ -54,10 +58,18 @@ public class GlobeSortClient {
         IntArray response = serverStub.sortIntegers(request);
         endTime = System.currentTimeMillis();
         long t_RPC = endTime - startTime;
-        System.out.println("run-time: " + t_RPC + "ms");
+        System.out.println("t_RPC = " + t_RPC + "ms");
         System.out.println("Sorted array");
         Integer[] r_values = response.getValuesList().toArray(new Integer[response.getValuesList().size()]);
-        System.out.println("sort-time: " + r_values[r_values.length-1] + "ms");
+        int t_sort = r_values[r_values.length-1];
+        System.out.println("t_sort = " + t_sort + "ms");
+
+
+        System.out.println("Latency : " + t_ping*1.0/2 + " ms");
+        System.out.println("Application throughput : " + values.length/(t_RPC/1000.0) + " per s");
+        System.out.println("One-way network throughput : " + (t_RPC-t_sort)/2.0 + " ms");
+
+
     }
 
     public void shutdown() throws InterruptedException {
